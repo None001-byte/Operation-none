@@ -61,3 +61,26 @@ if st.session_state.logs:
         )
 else:
     st.info("No tasks logged yet.")
+
+from gtts import gTTS
+from io import BytesIO
+
+st.markdown("---")
+st.subheader("🎤 Voice Generator (Manual Script to Audio)")
+
+text_input = st.text_area("✍️ Enter your script below:", height=200)
+voice_lang = st.selectbox("🌍 Select language:", ["en", "ar", "ur", "hi"])
+
+if st.button("🔊 Generate Voice"):
+    if not text_input.strip():
+        st.warning("Please enter some text first.")
+    else:
+        try:
+            tts = gTTS(text_input, lang=voice_lang)
+            mp3_fp = BytesIO()
+            tts.write_to_fp(mp3_fp)
+            st.audio(mp3_fp.getvalue(), format="audio/mp3")
+            st.success("✅ Audio generated!")
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
