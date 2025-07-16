@@ -51,8 +51,8 @@ col_left, col_center, col_right = st.columns([1, 4, 1])
 
 # 👉 CENTER: Auto Run Button + Logs
 with col_center:
-        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-        st.markdown("## ⚙️ Full Auto Video Task")
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    st.markdown("## ⚙️ Full Auto Video Task")
     if st.button(f"▶️ Run Auto Task for {chan}"):
         run_full_auto_task(chan)
         st.rerun()
