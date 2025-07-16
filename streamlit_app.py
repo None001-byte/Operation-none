@@ -216,7 +216,7 @@ if filtered:
         with col2:
             if completed_key not in st.session_state:
                 st.session_state[completed_key] = False
-                st.session_state[completed_key] = st.checkbox("✅ Done", value=st.session_state[completed_key], key=completed_key)
+                st.checkbox("✅ Done", key=completed_key)
 
             if st.button("🔁", key=f"reuse_{key}_{i}"):
                 st.session_state.scripts[chan] = entry['prompt']
