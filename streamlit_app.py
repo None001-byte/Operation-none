@@ -69,8 +69,17 @@ if prompt_input.strip():
 
 # Filter
 st.markdown("### 🔍 Filter Prompts by Status")
-filter_choice = st.selectbox("Show only prompts with status:",
-    ["All"] + status_options, key=f"{key}_filter")
+filter_cols = st.columns(len(status_options) + 1)
+status_filter_labels = ["All"] + status_options
+
+if f"{key}_filter_choice" not in st.session_state:
+    st.session_state[f"{key}_filter_choice"] = "All"
+
+for i, label in enumerate(status_filter_labels):
+    if filter_cols[i].button(label, key=f"{key}_filter_{i}"):
+        st.session_state[f"{key}_filter_choice"] = label
+
+filter_choice = st.session_state[f"{key}_filter_choice"]
 
 filtered = [p for p in st.session_state.prompts[chan]
             if filter_choice=="All" or p.get("status","📝 Draft")==filter_choice]
