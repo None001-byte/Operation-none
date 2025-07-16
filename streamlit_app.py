@@ -32,14 +32,10 @@ if st.button(f"Run {chan} Task"):
     st.markdown(f"[🔗 View Output]({log['link']})")
     
 if st.button(f"⚙️ Full Auto Video for {chan}"):
-    st.session_state.logs.append({
-        "channel": chan,
-        "status": "🚧 In Progress",
-        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "link": "https://placeholder.task.log"
-    })
-    st.success("Started full AI pipeline task...")
+    run_full_auto_task(chan)
+    st.success("✅ Auto video task completed.")
     st.experimental_rerun()
+
 
 # Task Timer
 if f"{key}_start_time" not in st.session_state:
