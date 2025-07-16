@@ -1,119 +1,84 @@
 import streamlit as st
 import datetime
 import random
+from io import BytesIO
 
 st.set_page_config(page_title="Halal Control Panel v1.5", layout="wide")
 
-# Session state setup
+# Session state
 if "logs" not in st.session_state:
     st.session_state.logs = []
 if "scripts" not in st.session_state:
-    st.session_state.scripts = {
-        "Little Ummahs": "",
-        "Sunnah Mindset": ""
-    }
+    st.session_state.scripts = {"Little Ummahs": "", "Sunnah Mindset": ""}
 if "prompts" not in st.session_state:
-    st.session_state.prompts = {
-        "Little Ummahs": [],
-        "Sunnah Mindset": []
-    }
+    st.session_state.prompts = {"Little Ummahs": [], "Sunnah Mindset": []}
 
-st.markdown("""
-# 🕌 Halal Control Panel v1.5
-Welcome, **Puchu** 👋  
-This is your mobile-friendly control panel for automating halal content generation.
-""")
+# UI
+st.markdown("# 🕌 Halal Control Panel v1.5\nWelcome, **Puchu** 👋")
+selected = st.radio("", ["Little Ummahs", "Sunnah Mindset"], horizontal=True)
+chan = selected
+key = chan.replace(" ", "_").lower()
 
-# Channel selector
-selected_channel = st.radio("", ["Little Ummahs", "Sunnah Mindset"], horizontal=True)
-channel_name = selected_channel
-key_prefix = channel_name.replace(" ", "_").lower()
+st.markdown(f"## ▶️ {chan} Controls")
 
-st.markdown(f"## ▶️ {channel_name} Controls")
-
-# Task Runner
-if st.button(f"Run {channel_name} Task"):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = {
-        "channel": channel_name,
-        "status": "✅ Success",
-        "time": timestamp,
-        "link": "https://example.com/view"
-    }
-    st.session_state.logs.append(log_entry)
+if st.button(f"Run {chan} Task"):
+    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log = {"channel": chan, "status": "✅ Success", "time": ts, "link": "https://example.com/view"}
+    st.session_state.logs.append(log)
     st.success("Task completed: ✅ Success")
-    st.markdown(f"[🔗 View Output]({log_entry['link']})")
+    st.markdown(f"[🔗 View Output]({log['link']})")
 
-# Prompt box
-st.markdown(f"### 📝 Script / Prompt for {channel_name}")
-prompt_input = st.text_area(
-    f"🎨 Describe your scene",
-    value=st.session_state.scripts[channel_name],
-    placeholder="e.g., Umm Jamil storms through Mecca holding a rock...",
-    key=f"{key_prefix}_prompt"
-)
+# Prompt / script
+st.markdown(f"### 📝 Script / Prompt for {chan}")
+prompt_input = st.text_area("🎨 Describe your scene",
+    value=st.session_state.scripts[chan], key=f"{key}_prompt")
 
-# Prompt Status Options
+# Status selector
 status_options = ["📝 Draft", "🔊 Voiced", "🎞️ Rendered", "✅ Finalized"]
-selected_status = st.selectbox("📌 Set Prompt Status", status_options, key=f"{key_prefix}_status")
+selected_status = st.selectbox("📌 Set Prompt Status", status_options, key=f"{key}_status")
 
-# Save prompt with status
+# Save + export
 if st.button("📌 Save Prompt"):
-    st.session_state.scripts[channel_name] = prompt_input
-    new_prompt = {
-        "prompt": prompt_input,
-        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "link": "https://example.com/output",
-        "status": selected_status
-    }
-    st.session_state.prompts[channel_name].append(new_prompt)
+    st.session_state.scripts[chan] = prompt_input
+    entry = {"prompt": prompt_input,
+             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+             "link": "https://example.com/output",
+             "status": selected_status}
+    st.session_state.prompts[chan].append(entry)
     st.success("Prompt saved with status!")
 
-# Export Script
-from io import BytesIO
-
+# Download script
 if prompt_input.strip():
-    filename = f"{channel_name.replace(' ', '_')}_{datetime.date.today()}.txt"
-    file_buffer = BytesIO()
-    file_buffer.write(prompt_input.encode("utf-8"))
-    file_buffer.seek(0)
+    fname = f"{chan.replace(' ', '_')}_{datetime.date.today()}.txt"
+    buf = BytesIO()
+    buf.write(prompt_input.encode("utf-8"))
+    buf.seek(0)
+    st.download_button("📥 Download Script", buf, file_name=fname, mime="text/plain")
 
-    st.download_button(
-        label="📥 Download Script",
-        data=file_buffer,
-        file_name=filename,
-        mime="text/plain"
-    )
-# Filter prompts by status
+# Filter
 st.markdown("### 🔍 Filter Prompts by Status")
-filter_choice = st.selectbox(
-    "Show only prompts with status:",
-    ["All"] + status_options,
-    key=f"{key_prefix}_filter"
-)
+filter_choice = st.selectbox("Show only prompts with status:",
+    ["All"] + status_options, key=f"{key}_filter")
 
-# Apply filtering
-filtered_prompts = [
-    p for p in st.session_state.prompts[channel_name]
-    if filter_choice == "All" or p.get("status", "📝 Draft") == filter_choice
-]
+filtered = [p for p in st.session_state.prompts[chan]
+            if filter_choice=="All" or p.get("status","📝 Draft")==filter_choice]
 
-# Prompt history
+# History
 st.markdown("### 🗂️ Previous Prompts")
-if st.session_state.prompts[channel_name]:
-    for i, entry in enumerate(reversed(filtered_prompts)):
-        col1, col2 = st.columns([6, 1])
+if filtered:
+    for i, entry in enumerate(reversed(filtered)):
+        col1, col2 = st.columns([6,1])
         with col1:
-            status = entry.get("status", "📝 Draft")
-st.markdown(f"`{entry['timestamp']}` — {status} — {entry['prompt']}")
+            status = entry.get("status","📝 Draft")
+            st.markdown(f"`{entry['timestamp']}` — {status} — {entry['prompt']}")
         with col2:
-            if st.button("🔁", key=f"reuse_{i}"):
-                st.session_state.scripts[channel_name] = entry['prompt']
+            if st.button("🔁", key=f"reuse_{key}_{i}"):
+                st.session_state.scripts[chan] = entry['prompt']
                 st.rerun()
 else:
     st.info("No prompts saved yet.")
 
-# Logs section
+# Logs
 st.markdown("### 📜 Activity Logs")
 if st.session_state.logs:
     for log in reversed(st.session_state.logs):
