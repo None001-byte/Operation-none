@@ -64,6 +64,22 @@ if st.button("📌 Save Prompt"):
     st.session_state.prompts[channel_name].append(new_prompt)
     st.success("Prompt saved!")
 
+# Export Script
+from io import BytesIO
+
+if prompt_input.strip():
+    filename = f"{channel_name.replace(' ', '_')}_{datetime.date.today()}.txt"
+    file_buffer = BytesIO()
+    file_buffer.write(prompt_input.encode("utf-8"))
+    file_buffer.seek(0)
+
+    st.download_button(
+        label="📥 Download Script",
+        data=file_buffer,
+        file_name=filename,
+        mime="text/plain"
+    )
+
 # Prompt history
 st.markdown("### 🗂️ Previous Prompts")
 if st.session_state.prompts[channel_name]:
