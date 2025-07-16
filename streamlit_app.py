@@ -33,19 +33,31 @@ st.markdown(f"### 📝 Script / Prompt for {chan}")
 prompt_input = st.text_area("🎨 Describe your scene",
     value=st.session_state.scripts[chan], key=f"{key}_prompt")
 
+# Thumbnail uploader
+uploaded_image = st.file_uploader(
+    "🖼️ Upload thumbnail image (optional)",
+    type=["png", "jpg", "jpeg"],
+    key=f"{key_prefix}_image"
+)
+
 # Status selector
 status_options = ["📝 Draft", "🔊 Voiced", "🎞️ Rendered", "✅ Finalized"]
 selected_status = st.selectbox("📌 Set Prompt Status", status_options, key=f"{key}_status")
 
-# Save + export
 if st.button("📌 Save Prompt"):
     st.session_state.scripts[chan] = prompt_input
-    entry = {"prompt": prompt_input,
-             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-             "link": "https://example.com/output",
-             "status": selected_status}
+
+    image_bytes = uploaded_image.read() if uploaded_image else None
+
+    entry = {
+        "prompt": prompt_input,
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "link": "https://example.com/output",
+        "status": selected_status,
+        "image": image_bytes
+    }
     st.session_state.prompts[chan].append(entry)
-    st.success("Prompt saved with status!")
+    st.success("Prompt saved with status and thumbnail!")
 
 # Download script
 if prompt_input.strip():
@@ -64,13 +76,15 @@ filtered = [p for p in st.session_state.prompts[chan]
             if filter_choice=="All" or p.get("status","📝 Draft")==filter_choice]
 
 # History
-st.markdown("### 🗂️ Previous Prompts")
+st.markdown("### 📂 Previous Prompts")
 if filtered:
     for i, entry in enumerate(reversed(filtered)):
-        col1, col2 = st.columns([6,1])
+        col1, col2 = st.columns([6, 1])
         with col1:
-            status = entry.get("status","📝 Draft")
+            status = entry.get("status", "📝 Draft")
             st.markdown(f"`{entry['timestamp']}` — {status} — {entry['prompt']}")
+            if entry.get("image"):
+                st.image(entry["image"], width=80)
         with col2:
             if st.button("🔁", key=f"reuse_{key}_{i}"):
                 st.session_state.scripts[chan] = entry['prompt']
