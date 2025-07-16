@@ -37,7 +37,7 @@ prompt_input = st.text_area("🎨 Describe your scene",
 uploaded_image = st.file_uploader(
     "🖼️ Upload thumbnail image (optional)",
     type=["png", "jpg", "jpeg"],
-    key=f"{key_prefix}_image"
+    key=f"{key}_image"
 )
 
 # Status selector
