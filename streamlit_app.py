@@ -19,7 +19,7 @@ if "selected_channel" not in st.session_state:
     st.session_state.selected_channel = "Little Ummahs"
 
 # Channel selector
-st.markdown("# 🕌 Halal Control Panel")
+st.markdown("<h1 style='text-align: center;'>🕌 Halal Control Panel</h1>", unsafe_allow_html=True)
 selected = st.radio("Select Channel", ["Little Ummahs", "Sunnah Mindset"], horizontal=True)
 chan = selected
 key = chan.replace(" ", "_").lower()
@@ -47,11 +47,12 @@ def run_full_auto_task(channel):
     })
 
 # Layout: three responsive columns
-col_left, col_center, col_right = st.columns([1.2, 2.5, 1.2])
+col_left, col_center, col_right = st.columns([1, 4, 1])
 
 # 👉 CENTER: Auto Run Button + Logs
 with col_center:
-    st.markdown("## ⚙️ Full Auto Video Task")
+        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+        st.markdown("## ⚙️ Full Auto Video Task")
     if st.button(f"▶️ Run Auto Task for {chan}"):
         run_full_auto_task(chan)
         st.rerun()
@@ -62,6 +63,7 @@ with col_center:
             st.markdown(f"`{log['time']}` — **{log['channel']}** → {log['status']} [🔗 Link]({log['link']})")
     else:
         st.info("No logs yet.")
+     st.markdown("</div>", unsafe_allow_html=True)
 
 # 👉 LEFT COLUMN: Prompt + Status + Tags
 with col_left:
