@@ -42,7 +42,18 @@ uploaded_image = st.file_uploader(
 
 # Status selector
 status_options = ["📝 Draft", "🔊 Voiced", "🎞️ Rendered", "✅ Finalized"]
-selected_status = st.selectbox("📌 Set Prompt Status", status_options, key=f"{key}_status")
+st.markdown("### 📌 Set Prompt Status")
+
+if f"{key}_selected_status" not in st.session_state:
+    st.session_state[f"{key}_selected_status"] = status_options[0]
+
+status_cols = st.columns(len(status_options))
+for i, label in enumerate(status_options):
+    if status_cols[i].button(label, key=f"{key}_statusbtn_{i}"):
+        st.session_state[f"{key}_selected_status"] = label
+
+selected_status = st.session_state[f"{key}_selected_status"]
+st.write(f"Selected: **{selected_status}**")
 
 if st.button("📌 Save Prompt"):
     st.session_state.scripts[chan] = prompt_input
