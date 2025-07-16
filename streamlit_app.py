@@ -160,13 +160,6 @@ for i, label in enumerate(status_filter_labels):
 
 filter_choice = st.session_state[f"{key}_filter_choice"]
 
-filtered = [
-    p for p in st.session_state.prompts[chan]
-    if (filter_choice == "All" or p.get("status", "📝 Draft") == filter_choice)
-    and (selected_tag == "All" or selected_tag in p.get("tags", []))
-]
-
-
 # Tag Filter Buttons
 st.markdown("---")
 st.markdown("### 🧠 Filter Prompts by Tags")
@@ -191,6 +184,12 @@ if all_tags:
             st.session_state[f"{key}_tag_filter"] = tag
 
 selected_tag = st.session_state[f"{key}_tag_filter"]
+
+filtered = [
+    p for p in st.session_state.prompts[chan]
+    if (filter_choice == "All" or p.get("status", "📝 Draft") == filter_choice)
+    and (selected_tag == "All" or selected_tag in p.get("tags", []))
+]
 
 # History
 st.markdown("---")
