@@ -2,6 +2,8 @@ import streamlit as st
 import datetime
 import random
 from io import BytesIO
+import json
+import base64
 
 st.set_page_config(page_title="Halal Control Panel v1.5", layout="wide")
 
@@ -111,6 +113,35 @@ if filtered:
                 st.rerun()
 else:
     st.info("No prompts saved yet.")
+
+#JSON
+st.markdown("### 📤 Export All Prompts as JSON")
+
+def prepare_prompt_for_export(prompt):
+    export_entry = prompt.copy()
+    if prompt.get("image"):
+        export_entry["image"] = base64.b64encode(prompt["image"]).decode("utf-8")
+    return export_entry
+
+combined_export = {
+    "Little Ummahs": [
+        prepare_prompt_for_export(p) for p in st.session_state.prompts["Little Ummahs"]
+    ],
+    "Sunnah Mindset": [
+        prepare_prompt_for_export(p) for p in st.session_state.prompts["Sunnah Mindset"]
+    ]
+}
+
+json_bytes = BytesIO()
+json_bytes.write(json.dumps(combined_export, indent=2).encode("utf-8"))
+json_bytes.seek(0)
+
+st.download_button(
+    label="📥 Download All Prompts (JSON)",
+    data=json_bytes,
+    file_name=f"halal_prompts_export_{datetime.date.today()}.json",
+    mime="application/json"
+)
 
 # Logs
 st.markdown("### 📜 Activity Logs")
