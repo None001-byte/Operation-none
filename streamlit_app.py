@@ -64,7 +64,7 @@ if st.button(f"Run {chan} Task"):
 if st.button(f"⚙️ Full Auto Video for {chan}"):
     run_full_auto_task(chan)
     st.success("✅ Auto video task completed.")
-    st.experimental_rerun()
+    st.rerun()
 
 
 # Task Timer
