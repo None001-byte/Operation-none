@@ -63,7 +63,7 @@ with col_center:
             st.markdown(f"`{log['time']}` — **{log['channel']}** → {log['status']} [🔗 Link]({log['link']})")
     else:
         st.info("No logs yet.")
-     st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # 👉 LEFT COLUMN: Prompt + Status + Tags
 with col_left:
