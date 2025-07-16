@@ -179,13 +179,13 @@ if filtered:
             st.image(img, width=100)
 
         with col2:
-    if completed_key not in st.session_state:
-        st.session_state[completed_key] = False
-    st.session_state[completed_key] = st.checkbox("✅ Done", value=st.session_state[completed_key], key=completed_key)
+            if completed_key not in st.session_state:
+                st.session_state[completed_key] = False
+                st.session_state[completed_key] = st.checkbox("✅ Done", value=st.session_state[completed_key], key=completed_key)
 
-    if st.button("🔁", key=f"reuse_{key}_{i}"):
-        st.session_state.scripts[chan] = entry['prompt']
-        st.rerun()
+            if st.button("🔁", key=f"reuse_{key}_{i}"):
+                st.session_state.scripts[chan] = entry['prompt']
+                st.rerun()
 
 else:
     st.info("No prompts saved yet.")
