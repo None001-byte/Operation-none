@@ -84,11 +84,24 @@ if prompt_input.strip():
         file_name=filename,
         mime="text/plain"
     )
+# Filter prompts by status
+st.markdown("### 🔍 Filter Prompts by Status")
+filter_choice = st.selectbox(
+    "Show only prompts with status:",
+    ["All"] + status_options,
+    key=f"{key_prefix}_filter"
+)
+
+# Apply filtering
+filtered_prompts = [
+    p for p in st.session_state.prompts[channel_name]
+    if filter_choice == "All" or p.get("status", "📝 Draft") == filter_choice
+]
 
 # Prompt history
 st.markdown("### 🗂️ Previous Prompts")
 if st.session_state.prompts[channel_name]:
-    for i, entry in enumerate(reversed(st.session_state.prompts[channel_name])):
+    for i, entry in enumerate(reversed(filtered_prompts)):
         col1, col2 = st.columns([6, 1])
         with col1:
             status = entry.get("status", "📝 Draft")
