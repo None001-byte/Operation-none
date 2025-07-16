@@ -115,6 +115,29 @@ else:
     st.info("No prompts saved yet.")
 
 #JSON
+st.markdown("### 🔁 Import Prompts from JSON")
+
+uploaded_json = st.file_uploader("📂 Upload JSON file to restore prompts", type=["json"])
+
+if uploaded_json:
+    try:
+        content = json.load(uploaded_json)
+        restored = 0
+
+        for channel in ["Little Ummahs", "Sunnah Mindset"]:
+            for new_entry in content.get(channel, []):
+                existing = st.session_state.prompts[channel]
+                # Check if already exists (based on timestamp + prompt)
+                if not any(e["timestamp"] == new_entry["timestamp"] and e["prompt"] == new_entry["prompt"] for e in existing):
+                    if "image" in new_entry and new_entry["image"]:
+                        new_entry["image"] = base64.b64decode(new_entry["image"])
+                    st.session_state.prompts[channel].append(new_entry)
+                    restored += 1
+
+        st.success(f"✅ {restored} prompts imported successfully.")
+    except Exception as e:
+        st.error(f"❌ Import failed: {e}")
+
 st.markdown("### 📤 Export All Prompts as JSON")
 
 def prepare_prompt_for_export(prompt):
