@@ -53,16 +53,21 @@ prompt_input = st.text_area(
     key=f"{key_prefix}_prompt"
 )
 
-# Save prompt
+# Prompt Status Options
+status_options = ["📝 Draft", "🔊 Voiced", "🎞️ Rendered", "✅ Finalized"]
+selected_status = st.selectbox("📌 Set Prompt Status", status_options, key=f"{key_prefix}_status")
+
+# Save prompt with status
 if st.button("📌 Save Prompt"):
     st.session_state.scripts[channel_name] = prompt_input
     new_prompt = {
         "prompt": prompt_input,
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "link": "https://example.com/output"
+        "link": "https://example.com/output",
+        "status": selected_status
     }
     st.session_state.prompts[channel_name].append(new_prompt)
-    st.success("Prompt saved!")
+    st.success("Prompt saved with status!")
 
 # Export Script
 from io import BytesIO
@@ -86,7 +91,8 @@ if st.session_state.prompts[channel_name]:
     for i, entry in enumerate(reversed(st.session_state.prompts[channel_name])):
         col1, col2 = st.columns([6, 1])
         with col1:
-            st.markdown(f"`{entry['timestamp']}` — {entry['prompt']}")
+            status = entry.get("status", "📝 Draft")
+st.markdown(f"`{entry['timestamp']}` — {status} — {entry['prompt']}")
         with col2:
             if st.button("🔁", key=f"reuse_{i}"):
                 st.session_state.scripts[channel_name] = entry['prompt']
