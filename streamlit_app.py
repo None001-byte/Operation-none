@@ -30,6 +30,16 @@ if st.button(f"Run {chan} Task"):
     st.session_state.logs.append(log)
     st.success("Task completed: ✅ Success")
     st.markdown(f"[🔗 View Output]({log['link']})")
+    
+if st.button(f"⚙️ Full Auto Video for {chan}"):
+    st.session_state.logs.append({
+        "channel": chan,
+        "status": "🚧 In Progress",
+        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "link": "https://placeholder.task.log"
+    })
+    st.success("Started full AI pipeline task...")
+    st.experimental_rerun()
 
 # Task Timer
 if f"{key}_start_time" not in st.session_state:
@@ -243,6 +253,36 @@ st.download_button(
     file_name=f"halal_prompts_export_{datetime.date.today()}.json",
     mime="application/json"
 )
+
+def run_full_auto_task(chan):
+    import time
+
+    # Simulate or replace with real AI calls
+    prompt = f"Auto-script for {chan} about kindness and faith."
+    image_link = "https://via.placeholder.com/300x180.png?text=Thumbnail"
+    audio_link = "https://example.com/audio/output.mp3"
+    video_link = "https://example.com/video/final.mp4"
+
+    # Simulate wait
+    time.sleep(2)
+
+    # Save as prompt
+    st.session_state.prompts[chan].append({
+        "prompt": prompt,
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "link": video_link,
+        "status": "✅ Finalized",
+        "image": None,
+        "tags": ["auto", "full-task", "pipeline"]
+    })
+
+    # Log
+    st.session_state.logs.append({
+        "channel": chan,
+        "status": "✅ Completed Auto Task",
+        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "link": video_link
+    })
 
 # Logs
 st.markdown("---")
