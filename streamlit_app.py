@@ -1,86 +1,76 @@
 import streamlit as st
 import datetime
+import random
 
-# Initialize task state and logs
-if "task_status" not in st.session_state:
-    st.session_state.task_status = {
-        "Little Ummahs": False,
-        "Sunnah Mindset": False
-    }
-
+# Initialize logs & scripts
 if "logs" not in st.session_state:
     st.session_state.logs = []
+if "scripts" not in st.session_state:
+    st.session_state.scripts = {
+        "Little Ummahs": "",
+        "Sunnah Mindset": ""
+    }
 
-st.title("🕌 Halal Control Panel v1.1 – Task Tracker")
+def run_task(task_name):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    outcome = random.choice(["✅ Success", "⚠️ Warning", "❌ Failed"])
+    link = f"https://example.com/output/{random.randint(1000, 9999)}"
+    log_entry = {
+        "task": task_name,
+        "status": outcome,
+        "time": timestamp,
+        "link": link
+    }
+    st.session_state.logs.append(log_entry)
+    return log_entry
 
-st.markdown("Track your daily progress for each YouTube channel. All actions are logged. More automation coming soon.")
+st.set_page_config(page_title="Halal Control Panel", layout="wide")
+st.title("🕌 Halal Control Panel v1.5")
 
-today = datetime.date.today().strftime("%Y-%m-%d")
+st.markdown("""
+Welcome, **Puchu** 👋  
+This is your mobile-friendly control panel for automating halal content generation.
+""")
 
-col1, col2 = st.columns(2)
+tab1, tab2 = st.tabs(["🎬 Little Ummahs", "📖 Sunnah Mindset"])
 
-# Task tracker for Little Ummahs
-with col1:
-    st.subheader("📺 Little Ummahs")
-    if not st.session_state.task_status["Little Ummahs"]:
-        if st.button("✅ Mark Little Ummahs as Done"):
-            st.session_state.task_status["Little Ummahs"] = True
-            st.session_state.logs.append({
-                "channel": "Little Ummahs",
-                "status": "✅ Completed",
-                "date": today,
-                "time": datetime.datetime.now().strftime("%H:%M:%S")
-            })
-            st.success("Marked as done!")
-    else:
-        st.info("✅ Task already marked as done for today.")
+with tab1:
+    st.subheader("▶️ Little Ummahs Controls")
+    if st.button("Run Little Ummahs Task"):
+        log = run_task("Little Ummahs Video")
+        st.success(f"Task completed: {log['status']}")
+        st.markdown(f"[🔗 View Output]({log['link']})")
 
-# Task tracker for Sunnah Mindset
-with col2:
-    st.subheader("🧠 Sunnah Mindset")
-    if not st.session_state.task_status["Sunnah Mindset"]:
-        if st.button("✅ Mark Sunnah Mindset as Done"):
-            st.session_state.task_status["Sunnah Mindset"] = True
-            st.session_state.logs.append({
-                "channel": "Sunnah Mindset",
-                "status": "✅ Completed",
-                "date": today,
-                "time": datetime.datetime.now().strftime("%H:%M:%S")
-            })
-            st.success("Marked as done!")
-    else:
-        st.info("✅ Task already marked as done for today.")
+    st.text_area("✍️ Script for Little Ummahs",
+                 value=st.session_state.scripts["Little Ummahs"],
+                 height=200,
+                 key="script_ummahs")
+    
+    if st.button("💾 Save Little Ummahs Script"):
+        st.session_state.scripts["Little Ummahs"] = st.session_state.script_ummahs
+        st.success("Script saved!")
 
-st.markdown("---")
-st.subheader("📜 Daily Logs")
+with tab2:
+    st.subheader("▶️ Sunnah Mindset Controls")
+    if st.button("Run Sunnah Mindset Task"):
+        log = run_task("Sunnah Mindset Video")
+        st.success(f"Task completed: {log['status']}")
+        st.markdown(f"[🔗 View Output]({log['link']})")
+
+    st.text_area("✍️ Script for Sunnah Mindset",
+                 value=st.session_state.scripts["Sunnah Mindset"],
+                 height=200,
+                 key="script_sunnah")
+    
+    if st.button("💾 Save Sunnah Script"):
+        st.session_state.scripts["Sunnah Mindset"] = st.session_state.script_sunnah
+        st.success("Script saved!")
+
+st.divider()
+st.subheader("📜 Activity Logs")
 
 if st.session_state.logs:
     for log in reversed(st.session_state.logs):
-        st.markdown(
-            f"**{log['date']} {log['time']}** — {log['channel']} → {log['status']}"
-        )
+        st.markdown(f"`{log['time']}` — **{log['task']}** → {log['status']} [🔗 Link]({log['link']})")
 else:
-    st.info("No tasks logged yet.")
-
-from gtts import gTTS
-from io import BytesIO
-
-st.markdown("---")
-st.subheader("🎤 Voice Generator (Manual Script to Audio)")
-
-text_input = st.text_area("✍️ Enter your script below:", height=200)
-voice_lang = st.selectbox("🌍 Select language:", ["en", "ar", "ur", "hi"])
-
-if st.button("🔊 Generate Voice"):
-    if not text_input.strip():
-        st.warning("Please enter some text first.")
-    else:
-        try:
-            tts = gTTS(text_input, lang=voice_lang)
-            mp3_fp = BytesIO()
-            tts.write_to_fp(mp3_fp)
-            st.audio(mp3_fp.getvalue(), format="audio/mp3")
-            st.success("✅ Audio generated!")
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
-
+    st.info("No logs yet. Click a run button to test a task.")
