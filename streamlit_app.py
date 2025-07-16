@@ -57,18 +57,22 @@ for i, label in enumerate(status_options):
 selected_status = st.session_state[f"{key}_selected_status"]
 st.write(f"Selected: **{selected_status}**")
 
+# Tag input
+tag_input = st.text_input("🏷️ Add tags (comma-separated)", key=f"{key}_tags")
+
 if st.button("📌 Save Prompt"):
     st.session_state.scripts[chan] = prompt_input
 
     image_bytes = uploaded_image.read() if uploaded_image else None
 
     entry = {
-        "prompt": prompt_input,
-        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "link": "https://example.com/output",
-        "status": selected_status,
-        "image": image_bytes
-    }
+    "prompt": prompt_input,
+    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "link": "https://example.com/output",
+    "status": selected_status,
+    "image": image_bytes,
+    "tags": [tag.strip() for tag in tag_input.split(",") if tag.strip()]
+}
     st.session_state.prompts[chan].append(entry)
     st.success("Prompt saved with status and thumbnail!")
 
@@ -105,8 +109,11 @@ if filtered:
         with col1:
             status = entry.get("status", "📝 Draft")
             st.markdown(f"`{entry['timestamp']}` — {status} — {entry['prompt']}")
+            if entry.get("tags"):
+                st.markdown("🏷️ Tags: " + ", ".join(entry["tags"]))
             if entry.get("image"):
                 st.image(entry["image"], width=80)
+        
         with col2:
             if st.button("🔁", key=f"reuse_{key}_{i}"):
                 st.session_state.scripts[chan] = entry['prompt']
