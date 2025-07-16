@@ -163,11 +163,11 @@ if filtered:
     for i, entry in enumerate(reversed(filtered)):
         col1, col2 = st.columns([6, 1])
         with col1:
-    status = entry.get("status", "📝 Draft")
-    tags = entry.get("tags", [])
-    img = entry.get("image")
-    completed_key = f"{key}_completed_{i}"
-    mark = "✅" if st.session_state.get(completed_key, False) else ""
+            status = entry.get("status", "📝 Draft")
+            tags = entry.get("tags", [])
+            img = entry.get("image")
+            completed_key = f"{key}_completed_{i}"
+            mark = "✅" if st.session_state.get(completed_key, False) else ""
 
     with st.container():
         st.markdown(f"#### {mark} {status}")
