@@ -1,168 +1,139 @@
+# Halal Control Panel v2.0 (Inspired by Base44)
+# All new layout with centralized logic, dark theme, icons, modern UI
+
 import streamlit as st
 import datetime
-import random
-from io import BytesIO
-import json
 import base64
-import pandas as pd
+import json
+from io import BytesIO
 
-# === PAGE CONFIG ===
-st.set_page_config(page_title="Halal Control Panel", layout="wide")
+# ---- CONFIG ----
+st.set_page_config(page_title="Halal Control Panel v2.0", layout="wide")
 
-# === SESSION STATE INIT ===
-if "logs" not in st.session_state:
-    st.session_state.logs = []
-if "scripts" not in st.session_state:
-    st.session_state.scripts = {"Little Ummahs": "", "Sunnah Mindset": ""}
+# ---- SESSION ----
 if "prompts" not in st.session_state:
     st.session_state.prompts = {"Little Ummahs": [], "Sunnah Mindset": []}
-if "current_view" not in st.session_state:
-    st.session_state.current_view = "Dashboard Overview"
+if "scripts" not in st.session_state:
+    st.session_state.scripts = {"Little Ummahs": "", "Sunnah Mindset": ""}
+if "logs" not in st.session_state:
+    st.session_state.logs = []
 
-# === HEADER ===
+# ---- STYLING ----
 st.markdown("""
-    <h1 style='text-align: center; font-size: 42px;'>🕌 Halal Control Panel</h1>
-    <p style='text-align: center;'>Welcome, <strong>Puchu</strong> 👋</p>
+    <style>
+    body { background-color: #121726; }
+    h1, h2, h3, h4, h5, h6, p, div { color: #FFFFFF !important; }
+    .dashboard-card {
+        background-color: #1e1e2f;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+    .button-gradient button {
+        background: linear-gradient(to right, #915EFF, #4E81EB);
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 10px 24px;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# === NAVIGATION TOGGLE ===
-view_options = ["Dashboard Overview", "Sunnah Mindset", "Little Ummahs"]
-view = st.selectbox("Select View", view_options, index=view_options.index(st.session_state.current_view))
-st.session_state.current_view = view
+# ---- HEADER ----
+st.markdown("""
+<h1 style='text-align: center; font-size: 48px;'>Welcome back, Puchu!</h1>
+<p style='text-align: center; font-size: 18px;'>Your AI-powered halal productivity dashboard 🕌</p>
+""", unsafe_allow_html=True)
 
-# === VIEW ROUTING ===
-if view == "Dashboard Overview":
-    st.markdown("### 📊 Dashboard Overview")
-    st.info("Welcome to the central dashboard. Use the toggle above to switch views.")
-    st.markdown("### 📜 Activity Logs")
-    if st.session_state.logs:
-        for log in reversed(st.session_state.logs):
-            st.markdown(f"`{log['time']}` — **{log['channel']} Video** → {log['status']} [🔗 Link]({log['link']})")
-    else:
-        st.info("No logs yet. Start a task to see results.")
+# ---- CHANNEL SELECT ----
+page = st.radio("", ["Dashboard Overview", "Sunnah Mindset", "Little Ummahs"], horizontal=True)
+chan = page if "Overview" not in page else "Little Ummahs"
+key = chan.replace(" ", "_").lower()
 
-    st.markdown("### 📅 Prompt Timeline Calendar")
+# ---- DASHBOARD STATS ----
+total = len(st.session_state.prompts[chan])
+completed = len([p for p in st.session_state.prompts[chan] if p.get("status") == "✅ Finalized"])
+images = len([p for p in st.session_state.prompts[chan] if p.get("image")])
+prompts = len(st.session_state.prompts[chan])
 
-    def get_calendar_data():
-        data = []
-        for channel in ["Little Ummahs", "Sunnah Mindset"]:
-            for p in st.session_state.prompts[channel]:
-                dt = pd.to_datetime(p["timestamp"])
-                data.append({"date": dt.date(), "channel": channel})
-        return pd.DataFrame(data)
+col1, col2, col3, col4 = st.columns(4)
+col1.markdown(f"""
+<div class='dashboard-card'>
+<h3>📋 Total Tasks</h3><p>{total}</p>
+</div>
+""", unsafe_allow_html=True)
+col2.markdown(f"""
+<div class='dashboard-card'>
+<h3>✅ Completed</h3><p>{completed}</p>
+</div>
+""", unsafe_allow_html=True)
+col3.markdown(f"""
+<div class='dashboard-card'>
+<h3>🖼️ Images</h3><p>{images}</p>
+</div>
+""", unsafe_allow_html=True)
+col4.markdown(f"""
+<div class='dashboard-card'>
+<h3>💬 All Prompts</h3><p>{prompts}</p>
+</div>
+""", unsafe_allow_html=True)
 
-    calendar_data = get_calendar_data()
-    if not calendar_data.empty:
-        dates = calendar_data["date"].value_counts().sort_index()
-        st.bar_chart(dates)
-    else:
-        st.info("No prompt history available for calendar.")
+# ---- PROMPT INPUT ----
+st.markdown("---")
+st.markdown(f"## 📝 New Prompt for {chan}")
 
-elif view in ["Little Ummahs", "Sunnah Mindset"]:
-    chan = view
-    key = chan.replace(" ", "_").lower()
+prompt = st.text_area("Describe your prompt", key=f"{key}_prompt")
+image = st.file_uploader("Upload optional thumbnail", type=["jpg", "jpeg", "png"], key=f"{key}_img")
+status = st.radio("Set Status", ["📝 Draft", "🔊 Voiced", "🎞️ Rendered", "✅ Finalized"], horizontal=True)
+tags = st.text_input("Add tags (comma-separated)", key=f"{key}_tags")
 
-    st.markdown(f"## ▶️ {chan} Controls")
+if st.button("Save Prompt", key=f"{key}_save"):
+    entry = {
+        "prompt": prompt,
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "status": status,
+        "tags": [t.strip() for t in tags.split(",") if t.strip()],
+        "image": image.read() if image else None
+    }
+    st.session_state.prompts[chan].append(entry)
+    st.success("✅ Prompt saved!")
 
-    if st.button(f"Run {chan} Task"):
-        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log = {"channel": chan, "status": "✅ Success", "time": ts, "link": "https://example.com/view"}
-        st.session_state.logs.append(log)
-        st.success("Task completed: ✅ Success")
-        st.markdown(f"[🔗 View Output]({log['link']})")
+# ---- TIMELINE VIEW ----
+st.markdown("---")
+st.markdown("## 📜 Timeline")
+for entry in reversed(st.session_state.prompts[chan][-5:]):
+    st.markdown(f"""
+    <div style='border:1px solid #333;border-radius:10px;padding:12px;margin-bottom:10px;background:#1f2335;'>
+        <b>{entry['status']}</b> - {entry['timestamp']}<br>
+        <span style='color:#aaa;'>{entry['prompt']}</span><br>
+        {' '.join([f'<span style="background:#333;padding:3px 6px;border-radius:6px;margin-right:4px;">{t}</span>' for t in entry.get('tags', [])])}
+        {('<br><img src="data:image/png;base64,' + base64.b64encode(entry['image']).decode() + '" width="100">') if entry.get('image') else ''}
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Prompt / script
-    st.markdown(f"### 📝 Script / Prompt for {chan}")
-    prompt_input = st.text_area("🎨 Describe your scene", value=st.session_state.scripts[chan], key=f"{key}_prompt")
+# ---- EXPORT ----
+def export_data():
+    def encode_entry(entry):
+        e = entry.copy()
+        if e.get("image"):
+            e["image"] = base64.b64encode(e["image"]).decode()
+        return e
+    
+    data = {
+        "Little Ummahs": [encode_entry(e) for e in st.session_state.prompts["Little Ummahs"]],
+        "Sunnah Mindset": [encode_entry(e) for e in st.session_state.prompts["Sunnah Mindset"]]
+    }
+    buf = BytesIO()
+    buf.write(json.dumps(data, indent=2).encode())
+    buf.seek(0)
+    return buf
 
-    # Image
-    uploaded_image = st.file_uploader("🖼️ Upload thumbnail image (optional)", type=["png", "jpg", "jpeg"], key=f"{key}_image")
-
-    # Status
-    status_options = ["📝 Draft", "🔊 Voiced", "🎞️ Rendered", "✅ Finalized"]
-    if f"{key}_selected_status" not in st.session_state:
-        st.session_state[f"{key}_selected_status"] = status_options[0]
-
-    st.markdown("### 📌 Set Prompt Status")
-    status_cols = st.columns(len(status_options))
-    for i, label in enumerate(status_options):
-        if status_cols[i].button(label, key=f"{key}_statusbtn_{i}"):
-            st.session_state[f"{key}_selected_status"] = label
-
-    selected_status = st.session_state[f"{key}_selected_status"]
-    st.write(f"Selected: **{selected_status}**")
-
-    # Tags
-    tag_input = st.text_input("🏷️ Add tags (comma-separated)", key=f"{key}_tags")
-
-    if st.button("📌 Save Prompt"):
-        st.session_state.scripts[chan] = prompt_input
-        image_bytes = uploaded_image.read() if uploaded_image else None
-        entry = {
-            "prompt": prompt_input,
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "link": "https://example.com/output",
-            "status": selected_status,
-            "image": image_bytes,
-            "tags": [tag.strip() for tag in tag_input.split(",") if tag.strip()]
-        }
-        st.session_state.prompts[chan].append(entry)
-        st.success("Prompt saved with status and thumbnail!")
-
-    # Download Script
-    if prompt_input.strip():
-        fname = f"{chan.replace(' ', '_')}_{datetime.date.today()}.txt"
-        buf = BytesIO()
-        buf.write(prompt_input.encode("utf-8"))
-        buf.seek(0)
-        st.download_button("📥 Download Script", buf, file_name=fname, mime="text/plain")
-
-    # Filters
-    st.markdown("### 🔍 Filter Prompts by Status")
-    if f"{key}_filter_choice" not in st.session_state:
-        st.session_state[f"{key}_filter_choice"] = "All"
-
-    filter_cols = st.columns(len(status_options) + 1)
-    for i, label in enumerate(["All"] + status_options):
-        if filter_cols[i].button(label, key=f"{key}_filter_{i}"):
-            st.session_state[f"{key}_filter_choice"] = label
-
-    filter_choice = st.session_state[f"{key}_filter_choice"]
-
-    # Tag Filter
-    st.markdown("### 🧠 Filter Prompts by Tags")
-    all_tags = sorted(set(tag for p in st.session_state.prompts[chan] for tag in p.get("tags", [])))
-    if f"{key}_tag_filter" not in st.session_state:
-        st.session_state[f"{key}_tag_filter"] = "All"
-
-    tag_cols = st.columns(min(len(all_tags) + 1, 6))
-    if tag_cols[0].button("All", key=f"{key}_tagbtn_all"):
-        st.session_state[f"{key}_tag_filter"] = "All"
-    for i, tag in enumerate(all_tags):
-        if tag_cols[(i + 1) % 6].button(tag, key=f"{key}_tagbtn_{i}"):
-            st.session_state[f"{key}_tag_filter"] = tag
-
-    selected_tag = st.session_state[f"{key}_tag_filter"]
-
-    # Filtered View
-    filtered = [p for p in st.session_state.prompts[chan]
-                if (filter_choice == "All" or p.get("status", "📝 Draft") == filter_choice)
-                and (selected_tag == "All" or selected_tag in p.get("tags", []))]
-
-    # History
-    st.markdown("### 📂 Previous Prompts")
-    if filtered:
-        for i, entry in enumerate(reversed(filtered)):
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.markdown(f"`{entry['timestamp']}` — {entry['status']} — {entry['prompt']}")
-                if entry.get("tags"):
-                    st.markdown("🏷️ Tags: " + ", ".join(entry["tags"]))
-                if entry.get("image"):
-                    st.image(entry["image"], width=80)
-            with col2:
-                if st.button("🔁", key=f"reuse_{key}_{i}"):
-                    st.session_state.scripts[chan] = entry['prompt']
-                    st.rerun()
-    else:
-        st.info("No prompts saved yet.")
+st.markdown("---")
+colA, colB = st.columns(2)
+with colA:
+    if st.button("🔄 Refresh Dashboard", key="refresh", help="Manual reload"):
+        st.experimental_rerun()
+with colB:
+    st.download_button("📥 Export JSON", data=export_data(), file_name="halal_dashboard.json", mime="application/json")
