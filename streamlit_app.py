@@ -8,7 +8,7 @@ import requests
 
 st.set_page_config(page_title="Halal Control Panel v2.0", layout="wide")
 
-# --- Session State ---
+# --- Session State ----
 if "logs" not in st.session_state:
     st.session_state.logs = []
 if "scripts" not in st.session_state:
